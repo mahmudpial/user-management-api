@@ -1,18 +1,27 @@
 #!/bin/bash
+set -e
 
+echo "=== Running migrations ==="
 php artisan migrate --force
+
+echo "=== Caching config ==="
 php artisan config:clear
 php artisan config:cache
 php artisan route:cache
 
-# Replace PORT in nginx config dynamically
-sed -i "s/listen 80;/listen ${PORT:-80};/" /etc/nginx/sites-available/default
+echo "=== Setting PORT ==="
+NGINX_PORT=${PORT:-80}
+echo "Using port: $NGINX_PORT"
+sed -i "s/listen 80;/listen $NGINX_PORT;/" /etc/nginx/sites-available/default
 
-# Start PHP-FPM in background
+echo "=== Testing nginx config ==="
+nginx -t
+
+echo "=== Starting PHP-FPM ==="
 php-fpm -D
 
-# Wait for PHP-FPM to be ready
+echo "=== Waiting for PHP-FPM ==="
 sleep 3
 
-# Start Nginx in foreground
+echo "=== Starting Nginx ==="
 exec nginx -g "daemon off;"
