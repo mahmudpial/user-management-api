@@ -12,7 +12,34 @@ php artisan route:cache
 echo "=== Setting PORT ==="
 NGINX_PORT=${PORT:-80}
 echo "Using port: $NGINX_PORT"
-sed -i "s/listen 80;/listen $NGINX_PORT;/" /etc/nginx/sites-available/default
+
+# Write nginx config directly with correct port
+cat > /etc/nginx/sites-available/default << EOF
+server {
+    listen $NGINX_PORT;
+    server_name _;
+    root /var/www/html/public;
+    index index.php index.html;
+
+    client_max_body_size 100M;
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
+        include fastcgi_params;
+        fastcgi_read_timeout 300;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+EOF
 
 echo "=== Testing nginx config ==="
 nginx -t
