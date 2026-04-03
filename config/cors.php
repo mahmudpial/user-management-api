@@ -13,9 +13,12 @@ return [
         'http://127.0.0.1:3000',
         'http://127.0.0.1:5173',
         'http://localhost/my-fullstack-portfolio-application/portfolio_and_blog_app_fontend',
+        'https://portfolio-and-blog-app-fontend.vercel.app',
     ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '#^https://portfolio-and-blog-app-fontend.*\.vercel\.app$#',
+    ],
 
     'allowed_headers' => ['*'],
 
