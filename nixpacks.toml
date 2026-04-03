@@ -1,11 +1,15 @@
 [phases.setup]
-nixPkgs = ["php84", "php84Extensions.mbstring", "php84Extensions.xml", "php84Extensions.pdo", "php84Extensions.pdo_mysql", "php84Extensions.tokenizer", "php84Extensions.ctype", "php84Extensions.fileinfo", "php84Extensions.curl", "php84Extensions.openssl", "php84Extensions.bcmath", "php84Extensions.zip"]
+nixPkgs = ["php84", "php84Extensions.mbstring", "php84Extensions.xml", "php84Extensions.pdo", "php84Extensions.pdo_mysql", "php84Extensions.tokenizer", "php84Extensions.ctype", "php84Extensions.fileinfo", "php84Extensions.curl", "php84Extensions.openssl", "php84Extensions.bcmath", "php84Extensions.zip", "nodejs_20"]
 
 [phases.install]
 cmds = [
   "curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer",
-  "/usr/local/bin/composer install --optimize-autoloader --no-scripts --no-interaction --ignore-platform-reqs"
+  "/usr/local/bin/composer install --optimize-autoloader --no-scripts --no-interaction --ignore-platform-reqs",
+  "npm install"
 ]
+
+[phases.build]
+cmds = ["npm run build"]
 
 [start]
 cmd = "php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
