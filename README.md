@@ -1,60 +1,210 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🛡️ User Management API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A **Laravel 12** RESTful API for user management with JWT authentication, role-based access control, and MySQL database — deployable on Railway with a Vue.js frontend on Vercel.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🧰 Tech Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Layer | Technology |
+|---|---|
+| Backend | Laravel 12 (PHP) |
+| Database | MySQL |
+| Authentication | JWT (`tymon/jwt-auth`) |
+| Session/Cache | Database driver |
+| Frontend | Vue.js (separate repo, deployed on Vercel) |
+| Deployment | Railway (backend) + Aiven (MySQL) |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## ⚙️ Requirements
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- PHP >= 8.2
+- Composer
+- MySQL >= 8.0
+- Node.js (for frontend assets / Vite)
+- XAMPP or any local server (for local development)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 🚀 Local Setup
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 1. Clone the repository
 
-### Premium Partners
+```bash
+git clone https://github.com/your-username/user-management-api.git
+cd user-management-api
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 2. Install dependencies
 
-## Contributing
+```bash
+composer install
+npm install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. Configure environment
 
-## Code of Conduct
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Update your `.env` with local DB credentials:
 
-## Security Vulnerabilities
+```dotenv
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=user_management_db
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 4. Generate JWT secret
 
-## License
+```bash
+php artisan jwt:secret
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# user-management-api
+### 5. Run migrations
+
+```bash
+php artisan migrate
+```
+
+### 6. Seed the database (optional)
+
+```bash
+php artisan db:seed
+```
+
+### 7. Start the development server
+
+```bash
+php artisan serve
+```
+
+API will be available at: `http://localhost:8000`
+
+---
+
+## 🔑 Authentication
+
+This API uses **JWT (JSON Web Tokens)** for stateless authentication.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/register` | Register a new user |
+| POST | `/api/auth/login` | Login and receive JWT token |
+| POST | `/api/auth/logout` | Logout (invalidate token) |
+| GET | `/api/auth/me` | Get authenticated user |
+
+Include the token in the `Authorization` header:
+
+```
+Authorization: Bearer <your_token>
+```
+
+---
+
+## 👥 User Endpoints
+
+| Method | Endpoint | Description | Role Required |
+|---|---|---|---|
+| GET | `/api/users` | List all users | Admin |
+| GET | `/api/users/{id}` | Get a single user | Admin / Self |
+| PUT | `/api/users/{id}` | Update user | Admin / Self |
+| DELETE | `/api/users/{id}` | Delete user | Admin |
+
+---
+
+## 🌍 Environment Variables
+
+| Variable | Description |
+|---|---|
+| `APP_KEY` | Laravel application key |
+| `DB_*` | Database connection settings |
+| `JWT_SECRET` | Secret key for signing JWT tokens |
+| `SESSION_DRIVER` | Set to `database` |
+| `CACHE_STORE` | Set to `database` |
+| `QUEUE_CONNECTION` | Set to `database` |
+
+> ⚠️ **Never commit your `.env` file to version control.**
+
+---
+
+## 🚂 Railway Deployment
+
+1. Push your code to GitHub.
+2. Create a new Railway project and connect your repo.
+3. Add the following environment variables in Railway dashboard (same as your `.env`).
+4. Set the start command:
+
+```bash
+php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
+```
+
+5. Connect an **Aiven MySQL** instance and update `DB_*` variables with SSL settings:
+
+```dotenv
+DB_HOST=<aiven-host>
+DB_PORT=<aiven-port>
+DB_DATABASE=<your-db>
+DB_USERNAME=<your-user>
+DB_PASSWORD=<your-password>
+MYSQL_ATTR_SSL_CA=/etc/ssl/certs/ca-certificates.crt
+```
+
+---
+
+## 🖥️ Frontend
+
+The Vue.js frontend is hosted separately on **Vercel**.
+
+- Frontend Repo: [your-frontend-repo-link]
+- API Base URL must be set in the frontend `.env`:
+
+```dotenv
+VITE_API_BASE_URL=https://your-railway-app.up.railway.app
+```
+
+---
+
+## 🔒 Security Notes
+
+- JWT tokens expire based on `JWT_TTL` config (default: 60 minutes).
+- Passwords are hashed using **bcrypt** with `BCRYPT_ROUNDS=12`.
+- OWASP best practices followed for input validation and error handling.
+
+---
+
+## 📁 Project Structure
+
+```
+├── app/
+│   ├── Http/Controllers/     # API Controllers
+│   ├── Models/               # Eloquent Models
+│   └── Middleware/           # Auth & Role Middleware
+├── database/
+│   ├── migrations/           # DB Migrations
+│   └── seeders/              # DB Seeders
+├── routes/
+│   └── api.php               # API Routes
+├── .env.example              # Environment template
+└── README.md
+```
+
+---
+
+## 📄 License
+
+This project is open-source and available under the [MIT License](LICENSE).
+
+---
+
+## 🙋‍♂️ Author
+
+**Pial Mahmud**
+Full Stack Web Developer | CSE Student @ Daffodil International University
+[GitHub](https://github.com/mahmudpial) · [Portfolio](https://portfolio-and-blog-app-fontend.vercel.app/)
