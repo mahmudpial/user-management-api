@@ -1,6 +1,6 @@
 FROM php:8.2-fpm
 
-# ১. প্যাকেজ লিস্ট আপডেট এবং প্রয়োজনীয় লাইব্রেরি ইন্সটল
+# ১. সিস্টেম প্যাকেজ ইন্সটল
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -13,12 +13,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# ২. GD এক্সটেনশন কনফিগারেশন
+# ২. GD কনফিগারেশন
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 
-# ৩. এক্সটেনশনগুলো ইন্সটল (pdo_pgsql টি আলাদা লাইনে দিয়েছি যাতে এরর হলে ধরা যায়)
-RUN docker-php-ext-install pdo pdo_mysql gd
-RUN docker-php-ext-install pdo_pgsql
+# ৩. এক্সটেনশন ইন্সটল (এখানেই ডকার ক্যাশ আটকে থাকে, তাই 'libpq-dev' যাতে অবশ্যই পায় তা নিশ্চিত করছি)
+RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql gd
 
 # ৪. Composer ইন্সটল
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
