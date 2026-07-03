@@ -1,8 +1,6 @@
 FROM php:8.2-fpm
 
 # ১. প্যাকেজ লিস্ট আপডেট এবং প্রয়োজনীয় লাইব্রেরি ইন্সটল
-# এখানে একটি 'Dummy' আর্গুমেন্ট ব্যবহার করা হয়েছে যাতে বিল্ড ক্যাশ না হয়
-ARG CACHEBUST=1
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -15,11 +13,14 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# ২. GD এবং অন্যান্য এক্সটেনশন ইন্সটল
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql gd
+# ২. GD এক্সটেনশন কনফিগারেশন
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 
-# ৩. Composer ইন্সটল
+# ৩. এক্সটেনশনগুলো ইন্সটল (pdo_pgsql টি আলাদা লাইনে দিয়েছি যাতে এরর হলে ধরা যায়)
+RUN docker-php-ext-install pdo pdo_mysql gd
+RUN docker-php-ext-install pdo_pgsql
+
+# ৪. Composer ইন্সটল
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
