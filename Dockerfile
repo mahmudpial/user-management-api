@@ -1,27 +1,29 @@
-FROM php:8.4-fpm
+# PHP এবং Nginx যুক্ত ইমেজ ব্যবহার করা
+FROM php:8.2-fpm
 
+# প্রয়োজনীয় সিস্টেম প্যাকেজ ইন্সটল করা
 RUN apt-get update && apt-get install -y \
-    nginx \
-    supervisor \
-    git curl zip unzip \
-    libpng-dev libonig-dev libxml2-dev libssl-dev \
-    default-mysql-client \
-    && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    zip \
+    unzip \
+    git \
+    curl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql pdo_pgsql gd
 
+# Composer ইন্সটল করা
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+# ওয়ার্কিং ডিরেক্টরি
+WORKDIR /var/www
+
+# প্রজেক্ট ফাইল কপি করা
 COPY . .
 
-RUN composer install --optimize-autoloader --no-dev --no-interaction
-RUN chown -R www-data:www-data storage bootstrap/cache
-RUN chmod -R 775 storage bootstrap/cache
+# পারমিশন সেট করা
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-COPY docker/nginx.conf /etc/nginx/sites-available/default
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY docker/start.sh /start.sh
-RUN chmod +x /start.sh
-
-EXPOSE 8080
-CMD ["/start.sh"]
+# কমান্ড রান করা
+CMD php artisan serve --host=0.0.0.0 --port=$PORT
