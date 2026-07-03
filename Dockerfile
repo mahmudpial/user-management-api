@@ -1,7 +1,8 @@
 FROM php:8.2-fpm
 
 # ১. প্যাকেজ লিস্ট আপডেট এবং প্রয়োজনীয় লাইব্রেরি ইন্সটল
-# এখানে libpq-dev এবং postgresql-client নিশ্চিতভাবে রাখা হয়েছে
+# এখানে একটি 'Dummy' আর্গুমেন্ট ব্যবহার করা হয়েছে যাতে বিল্ড ক্যাশ না হয়
+ARG CACHEBUST=1
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
