@@ -35,4 +35,4 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 # ৯. অ্যাপ্লিকেশন রান করার কমান্ড
-CMD php artisan serve --host=0.0.0.0 --port=$PORT
+CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
