@@ -1,22 +1,21 @@
 FROM php:8.2-fpm
 
-# ১. প্যাকেজ লিস্ট আপডেট এবং প্রয়োজনীয় লাইব্রেরি ইন্সটল
+# ১. প্রয়োজনীয় সিস্টেম প্যাকেজগুলো ইন্সটল করা
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
     libpq-dev \
-    postgresql-client \
     zip \
     unzip \
     git \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# ২. PHP এক্সটেনশন কনফিগার করা
+# ২. GD এক্সটেনশন কনফিগার করা
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 
-# ৩. PHP এক্সটেনশন ইন্সটল করা
+# ৩. এক্সটেনশনগুলো আলাদাভাবে ইন্সটল করা (এতে এরর হলে ধরা সহজ হয়)
 RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql gd
 
 # ৪. Composer ইন্সটল করা
