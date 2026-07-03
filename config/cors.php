@@ -1,24 +1,16 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout'],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'http://localhost',
-        'http://localhost:3000',
-        'http://localhost:5173',
-        'http://127.0.0.1',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:5173',
-        'http://localhost/my-fullstack-portfolio-application/portfolio_and_blog_app_fontend',
         'https://portfolio-and-blog-app-fontend.vercel.app',
+        'http://localhost:5173',
     ],
 
-    'allowed_origins_patterns' => [
-        '#^https://portfolio-and-blog-app-fontend.*\.vercel\.app$#',
-    ],
+    'allowed_origins_patterns' => [], // এটি খালি রাখুন যদি উপরে নির্দিষ্ট করে দেন
 
     'allowed_headers' => ['*'],
 
