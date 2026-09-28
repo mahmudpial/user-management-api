@@ -7,6 +7,7 @@ return [
 
     'allowed_origins' => [
         'https://portfolio-and-blog-app-fontend.vercel.app',
+        'https://pialsoftdev.me',
         'http://localhost:5173',
     ],
 
