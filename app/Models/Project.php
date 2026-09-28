@@ -9,9 +9,11 @@ class Project extends Model
         'title',
         'description',
         'image',
+        'hero_image',
         'project_url',
         'github_url',
         'category',
+        'tech_stack',
         'is_featured',
         'order'
     ];

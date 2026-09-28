@@ -35,9 +35,11 @@ class ProjectController extends Controller
             'title' => 'required|string|max:200',
             'description' => 'required|string',
             'image' => 'nullable|string',
+            'hero_image' => 'nullable|string',
             'project_url' => 'nullable|url',
             'github_url' => 'nullable|url',
             'category' => 'nullable|string',
+            'tech_stack' => 'nullable|string',
             'is_featured' => 'nullable|boolean',
             'order' => 'nullable|integer',
         ]);
@@ -52,9 +54,11 @@ class ProjectController extends Controller
             'title' => 'sometimes|string|max:200',
             'description' => 'sometimes|string',
             'image' => 'nullable|string',
+            'hero_image' => 'nullable|string',
             'project_url' => 'nullable|url',
             'github_url' => 'nullable|url',
             'category' => 'nullable|string',
+            'tech_stack' => 'nullable|string',
             'is_featured' => 'nullable|boolean',
             'order' => 'nullable|integer',
         ]);
