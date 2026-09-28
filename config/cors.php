@@ -6,7 +6,9 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://www.pialsoftdev.me'
+         'https://www.pialsoftdev.me',
+         'https://pialsoftdev.me',
+         'https://portfolio-and-blog-app-fontend.vercel.app',
     ],
 
     'allowed_origins_patterns' => [], // এটি খালি রাখুন যদি উপরে নির্দিষ্ট করে দেন
