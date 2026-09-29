@@ -29,9 +29,12 @@ Route::get('/posts/{slug}', [PostController::class, 'show']);
 Route::post('/contacts', [ContactController::class, 'store']);
 Route::post('/posts/{id}/comments', [CommentController::class, 'store']);
 Route::post('/posts/{id}/likes', [LikeController::class, 'toggle']);
+Route::get('/services', [ServiceController::class, 'index']);
+Route::get('/pricing', [PricingController::class, 'index']);
+Route::get('/settings', [SiteSettingsController::class, 'index']);
 
 
-// ── Public routes ──────────────────────────────────────────────
+// ── Auth routes ──────────────────────────────────────────────
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
@@ -58,26 +61,26 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::put('/users/{user}', [AdminController::class, 'update']);
     Route::delete('/users/{user}', [AdminController::class, 'destroy']);
     Route::patch('/users/{user}/status', [AdminController::class, 'toggleStatus']);
-});
-
-// ── Admin only routes ──────────────────────────────────────
-Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
 
     // Skills
+    Route::get('/skills', [SkillController::class, 'index']);
     Route::post('/skills', [SkillController::class, 'store']);
     Route::put('/skills/{skill}', [SkillController::class, 'update']);
     Route::delete('/skills/{skill}', [SkillController::class, 'destroy']);
 
     // Categories
+    Route::get('/categories', [CategoryController::class, 'index']);
     Route::post('/categories', [CategoryController::class, 'store']);
     Route::put('/categories/{category}', [CategoryController::class, 'update']);
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 
     // Tags
+    Route::get('/tags', [TagController::class, 'index']);
     Route::post('/tags', [TagController::class, 'store']);
     Route::delete('/tags/{tag}', [TagController::class, 'destroy']);
 
     // Projects
+    Route::get('/projects', [ProjectController::class, 'index']);
     Route::post('/projects', [ProjectController::class, 'store']);
     Route::put('/projects/{project}', [ProjectController::class, 'update']);
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
@@ -93,10 +96,13 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::patch('/comments/{comment}/approve', [CommentController::class, 'approve']);
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
 
-    // Contacts
+    // Contacts / Messages
     Route::get('/contacts', [ContactController::class, 'index']);
+    Route::get('/messages', [ContactController::class, 'index']);
     Route::patch('/contacts/{contact}/read', [ContactController::class, 'markRead']);
     Route::delete('/contacts/{contact}', [ContactController::class, 'destroy']);
+    Route::patch('/messages/{contact}/read', [ContactController::class, 'markRead']);
+    Route::delete('/messages/{contact}', [ContactController::class, 'destroy']);
 
     // Site Settings
     Route::get('/settings', [SiteSettingsController::class, 'index']);
