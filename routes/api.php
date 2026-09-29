@@ -13,6 +13,9 @@ use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\Api\SiteSettingsController;
+use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\PricingController;
 
 
 // ── Public routes ──────────────────────────────────────────
@@ -94,4 +97,20 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::get('/contacts', [ContactController::class, 'index']);
     Route::patch('/contacts/{contact}/read', [ContactController::class, 'markRead']);
     Route::delete('/contacts/{contact}', [ContactController::class, 'destroy']);
+
+    // Site Settings
+    Route::get('/settings', [SiteSettingsController::class, 'index']);
+    Route::put('/settings', [SiteSettingsController::class, 'update']);
+
+    // Services
+    Route::get('/services', [ServiceController::class, 'index']);
+    Route::post('/services', [ServiceController::class, 'store']);
+    Route::put('/services/{service}', [ServiceController::class, 'update']);
+    Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+
+    // Pricing Plans
+    Route::get('/pricing', [PricingController::class, 'index']);
+    Route::post('/pricing', [PricingController::class, 'store']);
+    Route::put('/pricing/{plan}', [PricingController::class, 'update']);
+    Route::delete('/pricing/{plan}', [PricingController::class, 'destroy']);
 });

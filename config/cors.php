@@ -11,7 +11,7 @@ return [
          'https://portfolio-and-blog-app-fontend.vercel.app',
     ],
 
-    'allowed_origins_patterns' => [], // এটি খালি রাখুন যদি উপরে নির্দিষ্ট করে দেন
+    'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 
