@@ -33,6 +33,7 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
 
         ]);
+        $user->sendEmailVerificationNotification();
 
         $token = JWTAuth::fromUser($user);
 
@@ -41,6 +42,7 @@ class AuthController extends Controller
             'message' => 'User registered successfully.',
             'token' => $token,
             'user' => $user,
+            'email_verification_required' => true,
         ], 201);
     }
 
@@ -49,7 +51,7 @@ class AuthController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        if (!$token = JWTAuth::attempt($credentials)) {
+        if (! $token = JWTAuth::attempt($credentials)) {
             return response()->json([
                 'status' => false,
                 'message' => 'Invalid email or password.',

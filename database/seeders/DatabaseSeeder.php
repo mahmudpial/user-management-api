@@ -35,5 +35,7 @@ class DatabaseSeeder extends Seeder
 
         // Seed sample post with rich content
         $this->call(PostSeeder::class);
+
+        $this->call(PremiumProjectSeeder::class);
     }
 }
