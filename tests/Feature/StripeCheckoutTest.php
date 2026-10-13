@@ -20,7 +20,10 @@ class StripeCheckoutTest extends TestCase
     {
         Storage::fake('local');
         Storage::disk('local')->put('source/project.zip', 'zip');
-        config(['services.stripe.currency' => 'usd']);
+        config([
+            'services.stripe.checkout_enabled' => true,
+            'services.stripe.currency' => 'usd',
+        ]);
 
         $project = $this->createProject();
         $tier = $project->pricingTiers()->create([
@@ -64,6 +67,33 @@ class StripeCheckoutTest extends TestCase
             'stripe_checkout_session_id' => 'cs_test_created',
             'download_token' => null,
         ]);
+    }
+
+    public function test_checkout_cannot_be_started_while_payment_setup_is_disabled(): void
+    {
+        config(['services.stripe.checkout_enabled' => false]);
+
+        $gateway = Mockery::mock(StripeCheckoutGateway::class);
+        $gateway->shouldNotReceive('createSession');
+        $this->app->instance(StripeCheckoutGateway::class, $gateway);
+
+        $project = $this->createProject();
+        $tier = $project->pricingTiers()->create([
+            'tier_name' => 'Single License',
+            'price' => '89.00',
+            'features' => ['Source code'],
+            'file_path' => 'source/project.zip',
+        ]);
+
+        $this->postJson('/api/checkout/session', [
+            'pricing_tier_id' => $tier->id,
+            'customer_name' => 'Project Buyer',
+            'customer_email' => 'buyer@example.com',
+        ])->assertStatus(503)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', 'Checkout is temporarily unavailable while payment setup is being completed. Please check back soon.');
+
+        $this->assertDatabaseCount('project_orders', 0);
     }
 
     public function test_stripe_webhook_signature_fulfills_order_and_duplicate_event_is_idempotent(): void

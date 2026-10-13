@@ -22,6 +22,13 @@ class PaymentController extends Controller
 
     public function createCheckoutSession(CreateCheckoutSessionRequest $request): JsonResponse
     {
+        if (! config('services.stripe.checkout_enabled')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Checkout is temporarily unavailable while payment setup is being completed. Please check back soon.',
+            ], 503);
+        }
+
         $tier = ProjectPricingTier::query()->with('project')->findOrFail($request->integer('pricing_tier_id'));
         $filePath = $tier->file_path;
 

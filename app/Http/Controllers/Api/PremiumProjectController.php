@@ -16,7 +16,11 @@ class PremiumProjectController extends Controller
             ->orderBy('id')
             ->get();
 
-        return response()->json(['status' => true, 'data' => $projects]);
+        return response()->json([
+            'status' => true,
+            'checkout_enabled' => (bool) config('services.stripe.checkout_enabled'),
+            'data' => $projects,
+        ]);
     }
 
     public function show(string $slug)
