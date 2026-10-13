@@ -14,6 +14,14 @@ class ProjectOrderController extends Controller
 {
     public function initiate(InitiateProjectOrderRequest $request)
     {
+        $user = $request->user();
+        if (! $user->hasVerifiedEmail()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Please verify your email address before checkout.',
+            ], 403);
+        }
+
         $tier = ProjectPricingTier::query()
             ->with('project')
             ->findOrFail($request->integer('pricing_tier_id'));
@@ -34,8 +42,8 @@ class ProjectOrderController extends Controller
             'order_number' => 'ORD-'.Str::upper((string) Str::ulid()),
             'project_id' => $tier->project_id,
             'pricing_tier_id' => $tier->id,
-            'customer_name' => $request->validated('customer_name'),
-            'customer_email' => $request->validated('customer_email'),
+            'customer_name' => $user->name,
+            'customer_email' => $user->email,
             'amount' => $tier->discount_price ?? $tier->price,
             'payment_gateway' => $request->validated('payment_gateway'),
             'payment_status' => 'pending',

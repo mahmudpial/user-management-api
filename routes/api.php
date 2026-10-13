@@ -39,9 +39,11 @@ Route::get('/pricing', [PricingController::class, 'index']);
 Route::get('/settings', [SiteSettingsController::class, 'index']);
 Route::get('/premium-projects', [PremiumProjectController::class, 'index']);
 Route::get('/premium-projects/{slug}', [PremiumProjectController::class, 'show']);
-Route::post('/orders/initiate', [ProjectOrderController::class, 'initiate']);
-Route::post('/checkout/session', [PaymentController::class, 'createCheckoutSession'])->middleware('throttle:10,1');
-Route::get('/checkout/session/verify', [PaymentController::class, 'verifySession'])->middleware('throttle:30,1');
+Route::post('/orders/initiate', [ProjectOrderController::class, 'initiate'])->middleware('auth:api');
+Route::post('/checkout/session', [PaymentController::class, 'createCheckoutSession'])
+    ->middleware(['auth:api', 'throttle:10,1']);
+Route::get('/checkout/session/verify', [PaymentController::class, 'verifySession'])
+    ->middleware(['auth:api', 'throttle:30,1']);
 Route::post('/webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
 Route::get('/orders/download/{download_token}', [ProjectOrderController::class, 'download'])
     ->name('premium-projects.download');
@@ -66,6 +68,9 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/auth/refresh', [AuthController::class, 'refresh']);
 
     Route::prefix('user')->group(function () {
+        Route::get('/dashboard', [UserController::class, 'dashboard']);
+        Route::get('/orders/{order}/download', [UserController::class, 'downloadOrder'])
+            ->name('user.orders.download');
         Route::get('/profile', [UserController::class, 'profile']);
         Route::put('/profile', [UserController::class, 'updateProfile']);
         Route::put('/change-password', [UserController::class, 'changePassword']);

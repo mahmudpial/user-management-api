@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\PremiumProject;
 use App\Models\ProjectOrder;
+use App\Models\User;
 use App\Services\StripeCheckoutGateway;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -26,6 +27,7 @@ class StripeCheckoutTest extends TestCase
         ]);
 
         $project = $this->createProject();
+        $this->actingAs($this->verifiedBuyer(), 'api');
         $tier = $project->pricingTiers()->create([
             'tier_name' => 'Single License',
             'price' => '120.00',
@@ -49,8 +51,8 @@ class StripeCheckoutTest extends TestCase
 
         $response = $this->postJson('/api/checkout/session', [
             'pricing_tier_id' => $tier->id,
-            'customer_name' => 'Project Buyer',
-            'customer_email' => 'buyer@example.com',
+            'customer_name' => 'Impersonated Name',
+            'customer_email' => 'attacker@example.com',
         ]);
 
         $response->assertCreated()
@@ -65,8 +67,37 @@ class StripeCheckoutTest extends TestCase
             'payment_gateway' => 'stripe',
             'payment_status' => 'pending',
             'stripe_checkout_session_id' => 'cs_test_created',
+            'customer_name' => 'Project Buyer',
+            'customer_email' => 'buyer@example.com',
             'download_token' => null,
         ]);
+    }
+
+    public function test_checkout_requires_a_verified_member(): void
+    {
+        $project = $this->createProject();
+        $tier = $project->pricingTiers()->create([
+            'tier_name' => 'Single License',
+            'price' => '89.00',
+            'features' => ['Source code'],
+            'file_path' => 'source/project.zip',
+        ]);
+        $member = User::create([
+            'name' => 'Unverified Buyer',
+            'email' => 'buyer@example.com',
+            'password' => 'secret-password',
+        ]);
+
+        $this->actingAs($member, 'api')
+            ->postJson('/api/checkout/session', ['pricing_tier_id' => $tier->id])
+            ->assertForbidden()
+            ->assertJsonPath('success', false);
+    }
+
+    public function test_checkout_session_requires_authentication(): void
+    {
+        $this->postJson('/api/checkout/session', ['pricing_tier_id' => 1])
+            ->assertUnauthorized();
     }
 
     public function test_checkout_cannot_be_started_while_payment_setup_is_disabled(): void
@@ -78,6 +109,7 @@ class StripeCheckoutTest extends TestCase
         $this->app->instance(StripeCheckoutGateway::class, $gateway);
 
         $project = $this->createProject();
+        $this->actingAs($this->verifiedBuyer(), 'api');
         $tier = $project->pricingTiers()->create([
             'tier_name' => 'Single License',
             'price' => '89.00',
@@ -194,6 +226,7 @@ class StripeCheckoutTest extends TestCase
         Storage::fake('local');
         Storage::disk('local')->put('source/project.zip', 'zip');
         $project = $this->createProject();
+        $this->actingAs($this->verifiedBuyer(), 'api');
         $tier = $project->pricingTiers()->create([
             'tier_name' => 'Single License',
             'price' => '20.00',
@@ -237,7 +270,44 @@ class StripeCheckoutTest extends TestCase
 
         $downloadUrl = $response->json('data.download_url');
         $this->assertIsString($downloadUrl);
-        $this->assertStringContainsString('/api/orders/download/', $downloadUrl);
+        $this->assertStringContainsString('/api/user/orders/'.$order->id.'/download', $downloadUrl);
+    }
+
+    public function test_member_cannot_verify_another_users_checkout_session(): void
+    {
+        $project = $this->createProject();
+        $tier = $project->pricingTiers()->create([
+            'tier_name' => 'Single License',
+            'price' => '20.00',
+            'features' => ['Source code'],
+            'file_path' => 'source/project.zip',
+        ]);
+        $order = ProjectOrder::create([
+            'order_number' => 'ORD-'.Str::upper((string) Str::ulid()),
+            'project_id' => $project->id,
+            'pricing_tier_id' => $tier->id,
+            'customer_name' => 'Other Buyer',
+            'customer_email' => 'other@example.com',
+            'amount' => '20.00',
+            'currency' => 'usd',
+            'payment_gateway' => 'stripe',
+            'payment_status' => 'pending',
+            'stripe_checkout_session_id' => 'cs_test_other_buyer',
+        ]);
+        $session = Session::constructFrom([
+            'id' => 'cs_test_other_buyer',
+            'payment_status' => 'paid',
+            'metadata' => ['order_id' => (string) $order->id],
+        ]);
+        $gateway = Mockery::mock(StripeCheckoutGateway::class);
+        $gateway->shouldReceive('retrieveSession')->once()->andReturn($session);
+        $this->app->instance(StripeCheckoutGateway::class, $gateway);
+        $this->actingAs($this->verifiedBuyer(), 'api');
+
+        $this->getJson('/api/checkout/session/verify?session_id=cs_test_other_buyer')
+            ->assertNotFound();
+
+        $this->assertSame('pending', $order->fresh()->payment_status);
     }
 
     private function createProject(): PremiumProject
@@ -249,5 +319,17 @@ class StripeCheckoutTest extends TestCase
             'tech_stack' => ['Laravel'],
             'is_published' => true,
         ]);
+    }
+
+    private function verifiedBuyer(): User
+    {
+        $user = User::create([
+            'name' => 'Project Buyer',
+            'email' => 'buyer@example.com',
+            'password' => 'secret-password',
+        ]);
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        return $user;
     }
 }

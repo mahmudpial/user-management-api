@@ -22,6 +22,14 @@ class PaymentController extends Controller
 
     public function createCheckoutSession(CreateCheckoutSessionRequest $request): JsonResponse
     {
+        $user = $request->user();
+        if (! $user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please verify your email address before checkout.',
+            ], 403);
+        }
+
         if (! config('services.stripe.checkout_enabled')) {
             return response()->json([
                 'success' => false,
@@ -64,8 +72,8 @@ class PaymentController extends Controller
             'order_number' => 'ORD-'.Str::upper((string) Str::ulid()),
             'project_id' => $tier->project_id,
             'pricing_tier_id' => $tier->id,
-            'customer_name' => $request->validated('customer_name'),
-            'customer_email' => $request->validated('customer_email'),
+            'customer_name' => $user->name,
+            'customer_email' => $user->email,
             'amount' => $amount,
             'currency' => $currency,
             'payment_gateway' => 'stripe',
@@ -135,6 +143,14 @@ class PaymentController extends Controller
         VerifyCheckoutSessionRequest $request,
         StripeCheckoutFulfillment $fulfillment
     ): JsonResponse {
+        $user = $request->user();
+        if (! $user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please verify your email address to access this order.',
+            ], 403);
+        }
+
         try {
             $session = $this->stripe->retrieveSession((string) $request->validated('session_id'));
         } catch (ApiErrorException $exception) {
@@ -154,6 +170,10 @@ class PaymentController extends Controller
             return response()->json(['success' => false, 'message' => 'Checkout session does not match an order.'], 404);
         }
 
+        if (! hash_equals(mb_strtolower($user->email), mb_strtolower($order->customer_email))) {
+            return response()->json(['success' => false, 'message' => 'Checkout session does not match an order.'], 404);
+        }
+
         if ($session->payment_status === 'paid') {
             $fulfillment->processSession(
                 $session,
@@ -164,8 +184,6 @@ class PaymentController extends Controller
             $order->refresh()->load(['project', 'pricingTier']);
         }
 
-        $downloadToken = $order->download_token_encrypted;
-
         return response()->json([
             'success' => true,
             'data' => [
@@ -175,8 +193,8 @@ class PaymentController extends Controller
                 'amount' => $order->amount,
                 'currency' => strtoupper($order->currency),
                 'payment_status' => $order->payment_status,
-                'download_url' => $downloadToken
-                    ? route('premium-projects.download', ['download_token' => $downloadToken])
+                'download_url' => $order->payment_status === 'completed'
+                    ? route('user.orders.download', ['order' => $order->id])
                     : null,
             ],
         ], $order->payment_status === 'completed' ? 200 : 202);

@@ -15,8 +15,6 @@ class CreateCheckoutSessionRequest extends FormRequest
     {
         return [
             'pricing_tier_id' => ['required', 'integer', 'exists:project_pricing_tiers,id'],
-            'customer_name' => ['required', 'string', 'max:255'],
-            'customer_email' => ['required', 'email:rfc', 'max:255'],
         ];
     }
 }

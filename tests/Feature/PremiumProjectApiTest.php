@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\PremiumProject;
 use App\Models\ProjectOrder;
+use App\Models\User;
 use Database\Seeders\PremiumProjectSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -64,11 +65,15 @@ class PremiumProjectApiTest extends TestCase
             'features' => ['Source code'],
             'file_path' => 'premium-projects/source-codes/source.zip',
         ]);
+        $member = User::create([
+            'name' => 'Alex Buyer',
+            'email' => 'alex@example.com',
+            'password' => 'secret-password',
+        ]);
+        $member->forceFill(['email_verified_at' => now()])->save();
 
-        $response = $this->postJson('/api/orders/initiate', [
+        $response = $this->actingAs($member, 'api')->postJson('/api/orders/initiate', [
             'pricing_tier_id' => $tier->id,
-            'customer_name' => 'Alex Buyer',
-            'customer_email' => 'alex@example.com',
             'payment_gateway' => 'manual',
         ])->assertCreated()
             ->assertJsonPath('data.order.amount', '90.00')
