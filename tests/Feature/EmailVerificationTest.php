@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
+use RuntimeException;
 use Tests\TestCase;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -57,6 +58,26 @@ class EmailVerificationTest extends TestCase
         $this->withToken($token)
             ->postJson('/api/email/verification-notification')
             ->assertTooManyRequests();
+    }
+
+    public function test_verification_notification_returns_service_unavailable_when_sending_fails(): void
+    {
+        $user = User::create([
+            'name' => 'Resend Failure',
+            'email' => 'resend-failure@example.com',
+            'password' => 'secret-password',
+        ]);
+        $token = $user->createToken('vue-spa')->plainTextToken;
+
+        Notification::shouldReceive('send')
+            ->once()
+            ->andThrow(new RuntimeException('Mail provider unavailable.'));
+
+        $this->withToken($token)
+            ->postJson('/api/email/verification-notification')
+            ->assertServiceUnavailable()
+            ->assertJsonPath('status', false)
+            ->assertJsonPath('message', 'Could not send the verification email right now. Please try again shortly.');
     }
 
     public function test_notification_points_to_frontend_with_a_signed_backend_url(): void

@@ -21,7 +21,16 @@ class EmailVerificationController extends Controller
             ]);
         }
 
-        $user->sendEmailVerificationNotification();
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Could not send the verification email right now. Please try again shortly.',
+            ], 503);
+        }
 
         return response()->json([
             'status' => true,
